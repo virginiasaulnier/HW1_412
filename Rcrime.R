@@ -16,7 +16,7 @@ readin <- function(wd,file,skip){
 
 alleylights <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','311_Service_Requests_-_Alley_Lights_Out.csv',TRUE)#read in alley lights file using funtion readin
 crime <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','Crimes2016.csv',FALSE)#read in crime info using funtion readin
-
+population <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','District_Population.csv',FALSE)
 colnames(alleylights) <- c("Request","Status","Completion", "Number","Type", "Address", "Zip", "1","2","Ward","District","Community", "Latitude","Longitude","Location")
 
 alley16 <- alleylights[grep("2016", alleylights$Request), ]#filter out 2016
@@ -35,9 +35,11 @@ crime_counts = crime %>% #create new database(crime_counts) using the number of 
   summarise(crimetotal=length(Primary.Type)) %>%
 arrange(District)
 
-results = full_join(crime_counts, service_ave, by = "District")%>% #combine two data sets and arrage by crime total
+results = full_join(crime_counts, service_ave, by = "District")%>% #combine three data sets and arrage by crime total
   arrange(crimetotal)
-
+results = full_join(results, population, by = "District")%>% #combine three data sets and arrage by crime total
+  arrange(crimetotal)
+results$crimerate <- as.numeric(results$crimetotal,na.rm=TRUE)/as.numeric(results$population,na.rm=TRUE)
 plot(results$crimetotal, results$repairtime)
 #below is the start of print out info, will add if I have time
 
