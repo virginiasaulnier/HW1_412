@@ -1,5 +1,6 @@
 
 library(dplyr)
+
 #create a function to read in files, also has ability to skip extra header line, uses headers as column titles and returns data
 readin <- function(wd,file,skip){
   setwd(wd)
@@ -16,7 +17,8 @@ readin <- function(wd,file,skip){
 
 alleylights <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','311_Service_Requests_-_Alley_Lights_Out.csv',TRUE)#read in alley lights file using funtion readin
 crime <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','Crimes2016.csv',FALSE)#read in crime info using funtion readin
-population <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','District_Population.csv',FALSE)
+population <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','District_Population.csv',FALSE)#read in population data using function readin
+
 colnames(alleylights) <- c("Request","Status","Completion", "Number","Type", "Address", "Zip", "1","2","Ward","District","Community", "Latitude","Longitude","Location")
 
 alley16 <- alleylights[grep("2016", alleylights$Request), ]#filter out 2016
@@ -35,12 +37,20 @@ crime_counts = crime %>% #create new database(crime_counts) using the number of 
   summarise(crimetotal=length(Primary.Type)) %>%
 arrange(District)
 
-results = full_join(crime_counts, service_ave, by = "District")%>% #combine three data sets and arrage by crime total
+results = full_join(crime_counts, service_ave, by = "District")%>% #combine crime and service data sets and arrage by crime total
   arrange(crimetotal)
-results = full_join(results, population, by = "District")%>% #combine three data sets and arrage by crime total
+results = full_join(results, population, by = "District")%>% #combine population data sets and arrage by crime total
   arrange(crimetotal)
-results$crimerate <- as.numeric(results$crimetotal,na.rm=TRUE)/as.numeric(results$population,na.rm=TRUE)
-plot(results$crimetotal, results$repairtime)
+
+#results$crimerate <- as.numeric(results$crimetotal,na.rm=TRUE)/as.numeric(results$population,na.rm=TRUE)
+results$crimerate <- results$crimetotal/results$Population * 100
+plot(results$repairtime, results$crimerate)
+#mod1 <- lm(y ~ x)
+fit <- lm(results$repairtime ~ results$crimerate)
+abline(fit)
+
+#summary(fit)
+#abline(lm(height ~ bodymass))
 #below is the start of print out info, will add if I have time
 
 #dat$MAX <- apply(results[,-1],1,max,na.rm=TRUE) 
