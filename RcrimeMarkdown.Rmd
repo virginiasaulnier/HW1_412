@@ -1,0 +1,86 @@
+---
+title: "CrimeRateVsRepairTime"
+author: "Virginia Saulnier"
+date: "June 20, 2016"
+output: html_document
+---
+This program takes in data for Chicago crime rates, alley lights out, and population per district and compares these factors.
+
+
+Create a function to read in files, also has ability to skip extra header line, uses headers as column titles and returns data
+```{r}
+
+library(dplyr)
+readin <- function(wd,file,skip){
+  setwd(wd)
+  dataframe = readLines(file)
+  if (skip == "TRUE")
+  {
+    dataframe = dataframe[-1]
+  }
+  
+  data = read.csv(textConnection(dataframe),header=T, fill = TRUE )
+  
+  return(data)
+}
+```
+
+Read in 3 data sets using function "readin".
+
+```{r}
+
+alleylights <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','311_Service_Requests_-_Alley_Lights_Out.csv',TRUE)
+crime <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','Crimes2016.csv',FALSE)
+population <- readin('/Users/VirginiaSaulnier/Desktop/412_hw1','District_Population.csv',FALSE)
+
+```
+
+Assigns column names for dataframe "alleylights",filters only repairs from 2016 and creates new dataframe "alley16", caculates repair time by and puts repair time in new column "date_diff"
+
+```{r}
+colnames(alleylights) <- c("Request","Status","Completion", "Number","Type", "Address", "Zip", "1","2","Ward","District","Community", "Latitude","Longitude","Location")
+
+alley16 <- alleylights[grep("2016", alleylights$Request), ]
+alley16$date_diff <- as.Date(as.character(alley16$Completion),format="%m/%d/%y")-
+  as.Date(as.character(alley16$Request), format="%m/%d/%y")
+```
+
+Creates 2 new dataframes seperating data by district and calculates the average repair time and crime counts by district.
+
+```{r}
+service_ave = alley16 %>%
+  group_by(District) %>%
+  summarise(repairtime = round(mean(date_diff, na.rm=TRUE),digits = 1)) %>%
+  arrange(District) 
+group_by(alley16, District)
+
+crime_counts = crime %>% 
+  group_by(District) %>%
+  summarise(crimetotal=length(Primary.Type)) %>%
+arrange(District)
+
+```
+
+Joins all 3 data sets
+
+```{r}
+results = full_join(crime_counts, service_ave, by = "District")%>%
+  arrange(crimetotal)
+results = full_join(results, population, by = "District")%>% 
+  arrange(crimetotal)
+
+```
+
+Calculates a crime rate by dividing number of crimes per district by the population in each district. Plots results
+
+```{r}
+results$crimerate <- results$crimetotal/results$Population * 100
+plot(results$repairtime, results$crimerate)
+
+fit <- lm(results$repairtime ~ results$crimerate)
+abline(fit)
+
+```
+
+
+
