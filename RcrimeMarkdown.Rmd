@@ -11,6 +11,8 @@ Create a function to read in files, also has ability to skip extra header line, 
 ```{r}
 
 library(dplyr)
+library(Runit)
+
 readin <- function(wd,file,skip){
   setwd(wd)
   dataframe = readLines(file)
@@ -43,6 +45,10 @@ colnames(alleylights) <- c("Request","Status","Completion", "Number","Type", "Ad
 alley16 <- alleylights[grep("2016", alleylights$Request), ]
 alley16$date_diff <- as.Date(as.character(alley16$Completion),format="%m/%d/%y")-
   as.Date(as.character(alley16$Request), format="%m/%d/%y")
+
+# test.date_diff<- function(){
+# checkTrue(is.date(date_diff))
+# }
 ```
 
 Creates 2 new dataframes seperating data by district and calculates the average repair time and crime counts by district.
@@ -78,7 +84,7 @@ results$crimerate <- results$crimetotal/results$Population * 100
 plot(results$repairtime, results$crimerate)
 
 fit <- lm(results$repairtime ~ results$crimerate)
-abline(fit)
+#abline(lm(repairtime~crimerate))
 
 ```
 
